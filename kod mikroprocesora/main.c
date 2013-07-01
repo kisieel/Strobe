@@ -62,6 +62,7 @@ int main(void)
 			}
 			else if data == 3
 			{
+				time = 0;
 				time |= (b<<8);
 				data = 4;
 			}
