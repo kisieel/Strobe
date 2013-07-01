@@ -28,38 +28,20 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface =
 
 static FILE USBSerialStream;
 
-void USARTWriteChar(unsigned char data)
-{
-   while(!(UCSR1A & (1<<UDRE1)));
-   UDR1=data;
-}
-
-unsigned char USARTReadChar( void ) 
-{
-	PORTD &= ~(1<<2);
-	while ( !(UCSR1A & (1<<RXC1)) );
-	return UDR1;
-}
-
-SIGNAL(USART1_RX_vect)
-{
-	int16_t c = UDR1;
-	fputs(&c, &USBSerialStream);
-}
-
 int main(void)
 {
+    char data = -1; //-1 no data, 0 data ready, >0 reading data
+    char right;
+	char left;
+	int time;
+	char strobe_on = 1;
+	char state = 0;
+	
 	SetupHardware();
     
 	CDC_Device_CreateStream(&VirtualSerial_CDC_Interface, &USBSerialStream);
 
-	PORTB |= (1 << PB6) | (1 << PB4);
-	PORTB &= ~(1 << PB5);
 	
-	GlobalInterruptEnable();
-	USARTWriteChar('o');
-	USARTWriteChar('k');
-	USARTWriteChar('\n');
 
 	for (;;)
 	{
@@ -67,67 +49,94 @@ int main(void)
 		
 		if(b > -1)
 		{
-			fputs(&b, &USBSerialStream);
-			USARTWriteChar(b);			
+			if (b == 0x00) data = 1
+			else if data == 1
+			{
+				right = b;
+				data++;
+			}
+			else if data == 2
+			{
+				left = b;
+				data++;
+			}
+			else if data == 3
+			{
+				time |= (b<<8);
+				data = 4;
+			}
+			else if data == 4
+			{
+				time |= (b);
+				data = 0;
+			}
+			
 		}
 		
 		CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
 		USB_USBTask();
 		
-		PORTB ^= (1 << PB5);
+		if (data == 0)
+		{
+			while (eeprom_is_ready());
+			eeprom_write_byte((uint8_t*)0, (uint8_t)right);
+			while (eeprom_is_ready());
+			eeprom_write_byte((uint8_t*)8, (uint8_t)left);
+			while (eeprom_is_ready());
+			eeprom_write_byte((uint8_t*)16, (uint8_t)time);
+			data = -1;
+		}
+		
+		if (strobe_on)
+		{
+			for (char i=0; i<9; i++)
+			{
+				state = (1<<i);
+				state &= right;
+				
+				if (state == 0) PORTB &= ~(1<<4)
+				else PORTB |= (1<<4);
+				
+				state = (1<<i);
+				state &= left;
+				
+				if (state == 0) PORTB &= ~(1<<5)
+				else PORTB |= (1<<5);
+				
+				_delay_ms(time);//wiksa
+			}
+		}
 	}
 }
 
-void USARTInit(unsigned int ubrr_value)
-{
-   
-   UCSR1A |= (1 << U2X1);
-   UCSR1B |= (1 << RXEN1) | (1 << TXEN1) | (1 << RXCIE1);
-   UCSR1C |= (1 << UCSZ11) | (1 << UCSZ10);
-   UBRR1 = ubrr_value;
-   DDRD |= (1 << PD3);
-}
+
 
 void SetupHardware(void)
 {
+	DDRD |= (1<<4) | (1<<5); //lampy
+	
 	MCUSR &= ~(1 << WDRF);
 	wdt_disable();
 	
-	
-	DDRB = (1 << PB5) | (1 << PB7) | (1 << PB4) | (1 << PB5) | (1 << PB6);	
-	DDRC = (1 << PC6) | (1 << PC7);
-	
-
-	PORTB |= (1 << PB7);
-	_delay_ms(1000);
-	PORTB &= ~(1 << PB7);
-	_delay_ms(1000);
-	PORTC |= (1 << PC7);
-	_delay_ms(200);
-	PORTC &= ~(1 << PC7); //telefon
-	_delay_ms(1000);
-	PORTC |= (1 << PC7);
-	_delay_ms(200);
-	PORTC &= ~(1 << PC7);
-	
-
 	clock_prescale_set(clock_div_1);
+	
+	while (eeprom_is_ready());
+	
+	right = eeprom_read_byte((uint8_t*)0);
+	left = eeprom_read_byte((uint8_t*)8);
+	time = eeprom_read_byte((uint8_t*)16);
 
 	USB_Init();
-	
-	USARTInit(103);
 }
 
 void EVENT_USB_Device_Connect(void)
 {
-	PORTB |= (1 << PB4);
-	PORTB &= ~((1 << PB5) | (1 << PB6));
+	strobe_on = 0;
 }
 
 void EVENT_USB_Device_Disconnect(void)
 {
-	PORTB |= (1 << PB5);
-	PORTB &= ~((1 << PB4) | (1 << PB6));
+	strobe_on = 1;
 }
 
 void EVENT_USB_Device_ConfigurationChanged(void)
@@ -136,16 +145,16 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 
 	ConfigSuccess &= CDC_Device_ConfigureEndpoints(&VirtualSerial_CDC_Interface);
 
-	
+	/*
 	if(ConfigSuccess)
 	{
-		PORTB |= (1 << PB5) | (1 << PB4) | (1 << PB6);
+		
 	}
 	else
 	{
-		PORTB |= (1 << PB6);
-		PORTB &= ~((1 << PB5) | (1 << PB4));
+		
 	}
+	*/
 }
 
 void EVENT_USB_Device_ControlRequest(void)
