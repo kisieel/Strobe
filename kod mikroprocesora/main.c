@@ -79,11 +79,11 @@ int main(void)
 		
 		if (data == 0)
 		{
-			while (eeprom_is_ready());
+			while (!eeprom_is_ready());
 			eeprom_write_byte((uint8_t*)0, (uint8_t)right);
-			while (eeprom_is_ready());
+			while (!eeprom_is_ready());
 			eeprom_write_byte((uint8_t*)8, (uint8_t)left);
-			while (eeprom_is_ready());
+			while (!eeprom_is_ready());
 			eeprom_write_byte((uint8_t*)16, (uint8_t)time);
 			data = -1;
 		}
