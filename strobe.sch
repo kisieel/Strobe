@@ -10571,8 +10571,8 @@ Standard adjustable voltage regulator but in SMD form. Spark Fun Electronics SKU
 <part name="C3" library="rcl" deviceset="C-EU" device="C0805" value="100N"/>
 <part name="GND10" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 <part name="Q3" library="crystal" deviceset="CRYSTAL" device="SM49"/>
-<part name="C4" library="rcl" deviceset="C-EU" device="C0805" value="22Pf"/>
-<part name="C5" library="rcl" deviceset="C-EU" device="C0805" value="22Pf"/>
+<part name="C4" library="rcl" deviceset="C-EU" device="C0603" value="22Pf"/>
+<part name="C5" library="rcl" deviceset="C-EU" device="C0603" value="22Pf"/>
 <part name="GND7" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 <part name="R8" library="rcl" deviceset="R-EU_" device="R0805" value="10K"/>
 <part name="GND11" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
@@ -10733,15 +10733,24 @@ Standard adjustable voltage regulator but in SMD form. Spark Fun Electronics SKU
 <pinref part="GND10" gate="1" pin="GND"/>
 </segment>
 <segment>
-<wire x1="2.54" y1="144.78" x2="0" y2="144.78" width="0.1524" layer="91"/>
+<wire x1="2.54" y1="144.78" x2="2.286" y2="144.78" width="0.1524" layer="91"/>
+<wire x1="2.286" y1="144.78" x2="0" y2="144.78" width="0.1524" layer="91"/>
 <wire x1="0" y1="144.78" x2="0" y2="137.16" width="0.1524" layer="91"/>
 <wire x1="0" y1="137.16" x2="0" y2="132.08" width="0.1524" layer="91"/>
-<wire x1="2.54" y1="137.16" x2="0" y2="137.16" width="0.1524" layer="91"/>
-<wire x1="5.08" y1="154.94" x2="0" y2="154.94" width="0.1524" layer="91"/>
+<wire x1="2.54" y1="137.16" x2="2.286" y2="137.16" width="0.1524" layer="91"/>
+<wire x1="2.286" y1="137.16" x2="0" y2="137.16" width="0.1524" layer="91"/>
+<wire x1="5.08" y1="154.94" x2="4.826" y2="154.94" width="0.1524" layer="91"/>
+<wire x1="4.826" y1="154.94" x2="0" y2="154.94" width="0.1524" layer="91"/>
 <wire x1="0" y1="154.94" x2="0" y2="144.78" width="0.1524" layer="91"/>
 <junction x="0" y="144.78"/>
 <junction x="0" y="137.16"/>
 <pinref part="GND7" gate="1" pin="GND"/>
+<pinref part="C5" gate="G$1" pin="2"/>
+<junction x="2.286" y="137.16"/>
+<pinref part="C4" gate="G$1" pin="2"/>
+<junction x="2.286" y="144.78"/>
+<pinref part="C1" gate="G$1" pin="2"/>
+<junction x="4.826" y="154.94"/>
 </segment>
 <segment>
 <pinref part="IC1" gate="G$1" pin="UGND"/>
