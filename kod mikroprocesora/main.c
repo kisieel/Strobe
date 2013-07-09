@@ -27,21 +27,28 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface =
 	};
 
 static FILE USBSerialStream;
+volatile char data = -1; //-1 no data, 0 data ready, >0 reading data
+volatile char right;
+volatile char left;
+volatile int time;
+volatile char strobe_on = 1;
+volatile char state = 0;
+	
+void delay(int ms)
+{
+	for(int i = 0; i < ms; i++)
+		_delay_ms(8);
 
+}
+	
 int main(void)
 {
-    char data = -1; //-1 no data, 0 data ready, >0 reading data
-    char right;
-	char left;
-	int time;
-	char strobe_on = 1;
-	char state = 0;
-	
+
 	SetupHardware();
     
 	CDC_Device_CreateStream(&VirtualSerial_CDC_Interface, &USBSerialStream);
 
-	
+	GlobalInterruptEnable();
 
 	for (;;)
 	{
@@ -49,24 +56,24 @@ int main(void)
 		
 		if(b > -1)
 		{
-			if (b == 0x00) data = 1
-			else if data == 1
+			if (b == 0x00) data = 1;
+			else if (data == 1)
 			{
 				right = b;
 				data++;
 			}
-			else if data == 2
+			else if (data == 2)
 			{
 				left = b;
 				data++;
 			}
-			else if data == 3
+			else if (data == 3)
 			{
 				time = 0;
 				time |= (b<<8);
 				data = 4;
 			}
-			else if data == 4
+			else if (data == 4)
 			{
 				time |= (b);
 				data = 0;
@@ -84,29 +91,31 @@ int main(void)
 			while (!eeprom_is_ready());
 			eeprom_write_byte((uint8_t*)8, (uint8_t)left);
 			while (!eeprom_is_ready());
-			eeprom_write_byte((uint8_t*)16, (uint8_t)time);
+			eeprom_write_word(( uint16_t *)16, (uint16_t)time);
 			data = -1;
 		}
 		
-		if (strobe_on)
+
+		
+		if (PIND && (1 << PD2))
 		{
-			for (char i=0; i<9; i++)
+			for (int i=0; i<8; i++)
 			{
-				state = (1<<i);
-				state &= right;
+				if(!(PIND && (1 << PD2)))
+				break;
 				
-				if (state == 0) PORTB &= ~(1<<4)
+				if (right & (1 << i)) PORTB &= ~(1<<4);
 				else PORTB |= (1<<4);
+
 				
-				state = (1<<i);
-				state &= left;
-				
-				if (state == 0) PORTB &= ~(1<<5)
+				if (left & (1 << i)) PORTB &= ~(1<<5);
 				else PORTB |= (1<<5);
 				
-				_delay_ms(time);//wiksa
+				delay(time);//wiksa
 			}
 		}
+		else
+			PORTB = 0;
 	}
 }
 
@@ -114,18 +123,20 @@ int main(void)
 
 void SetupHardware(void)
 {
-	DDRD |= (1<<4) | (1<<5); //lampy
+	DDRB |= (1<<4) | (1<<5); //lampy
+	DDRD = 0;
+	PORTD = 0xff;
 	
 	MCUSR &= ~(1 << WDRF);
 	wdt_disable();
 	
 	clock_prescale_set(clock_div_1);
 	
-	while (eeprom_is_ready());
+	while (!eeprom_is_ready());
 	
 	right = eeprom_read_byte((uint8_t*)0);
 	left = eeprom_read_byte((uint8_t*)8);
-	time = eeprom_read_byte((uint8_t*)16);
+	time = eeprom_read_word((uint16_t*)16);
 
 	USB_Init();
 }
