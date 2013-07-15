@@ -10571,8 +10571,8 @@ Standard adjustable voltage regulator but in SMD form. Spark Fun Electronics SKU
 <part name="C3" library="rcl" deviceset="C-EU" device="C0805" value="100N"/>
 <part name="GND10" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 <part name="Q3" library="crystal" deviceset="CRYSTAL" device="SM49"/>
-<part name="C4" library="rcl" deviceset="C-EU" device="C0805" value="22Pf"/>
-<part name="C5" library="rcl" deviceset="C-EU" device="C0805" value="22Pf"/>
+<part name="C4" library="rcl" deviceset="C-EU" device="C0603" value="22Pf"/>
+<part name="C5" library="rcl" deviceset="C-EU" device="C0603" value="22Pf"/>
 <part name="GND7" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
 <part name="R8" library="rcl" deviceset="R-EU_" device="R0805" value="10K"/>
 <part name="GND11" library="SparkFun-Aesthetics" deviceset="GND" device=""/>
